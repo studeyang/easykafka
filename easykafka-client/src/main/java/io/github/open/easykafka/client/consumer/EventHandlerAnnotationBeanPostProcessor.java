@@ -4,17 +4,24 @@ import io.github.open.easykafka.client.annotation.EventHandler;
 import io.github.open.easykafka.client.annotation.Topic;
 import io.github.open.easykafka.client.model.ListenerMetadata;
 import io.github.open.easykafka.client.support.SpringContext;
-import io.github.open.easykafka.client.model.MessageConstant;
+import io.github.open.easykafka.client.support.utils.AnnotationModifyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.core.MethodIntrospector;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.kafka.annotation.KafkaHandler;
+import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.github.open.easykafka.client.model.MessageConstant.*;
 
 /**
  * @author <a href="https://github.com/studeyang">studeyang</a>
@@ -23,7 +30,14 @@ import java.util.Optional;
 @Slf4j
 public class EventHandlerAnnotationBeanPostProcessor implements BeanPostProcessor {
 
+    private static final String CLUSTER_ATTRIBUTE = "cluster";
+    private static final String TOPICS_ATTRIBUTE = "topics";
+
     private final ListenerContainer listenerContainer;
+    /**
+     * Send-Post.easykafka-example-topic -> counter
+     */
+    private final Map<String, AtomicInteger> counterMap = new HashMap<>();
 
     public EventHandlerAnnotationBeanPostProcessor(ListenerContainer listenerContainer) {
         this.listenerContainer = listenerContainer;
@@ -32,37 +46,47 @@ public class EventHandlerAnnotationBeanPostProcessor implements BeanPostProcesso
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
 
-        ReflectionUtils.doWithMethods(bean.getClass(), method -> {
-            EventHandler eventHandler = method.getAnnotation(EventHandler.class);
+        EventHandler eventHandler = AnnotationUtils.findAnnotation(bean.getClass(), EventHandler.class);
+        if (eventHandler != null) {
+            Assert.hasText(eventHandler.cluster(), "cluster不可为空");
+            Assert.hasText(eventHandler.topics(), "topics不可为空");
+            Assert.hasText(eventHandler.containerFactory(), "containerFactory不可为空");
 
-            if (eventHandler != null) {
-                // 设置 @EventHandler 默认属性
-                if (!StringUtils.hasText(eventHandler.cluster())) {
-                    modifyAnnotationValue(eventHandler, "cluster", getDefaultCluster(method));
-                }
-                if (!StringUtils.hasText(eventHandler.topics())) {
-                    modifyAnnotationValue(eventHandler, "topics", getDefaultTopics(method));
-                }
-                if (!StringUtils.hasText(eventHandler.groupId())) {
-                    modifyAnnotationValue(eventHandler, "groupId", getDefaultGroupId());
-                }
-                if (!StringUtils.hasText(eventHandler.containerFactory())) {
-                    modifyAnnotationValue(eventHandler, "containerFactory", getDefaultContainerFactory(eventHandler));
-                }
+            Assert.isTrue(DEFAULT_ID_VALUE.equals(eventHandler.id()), "@EventHandler id不支持设值");
 
-                // 添加 Listener 至 ListenerContainer
-                addListener(method, eventHandler);
-                listenerContainer.putListenerMethod(bean.getClass(), method);
-                listenerContainer.putListenerEvent(eventHandler.groupId(), method);
+            Set<Method> methodsWithHandler = MethodIntrospector.selectMethods(bean.getClass(),
+                    (ReflectionUtils.MethodFilter) method ->
+                            AnnotationUtils.findAnnotation(method, KafkaHandler.class) != null);
+            for (Method method : methodsWithHandler) {
+                addListener(bean.getClass(), method, eventHandler);
             }
-        });
+        }
+
+        processMethodLevelListeners(bean);
 
         return bean;
     }
 
-    private String getDefaultGroupId() {
-        return Optional.ofNullable(SpringContext.getService())
-                .orElseThrow(() -> new IllegalStateException("Can't get default groupId"));
+    private void processMethodLevelListeners(Object bean) {
+
+        ReflectionUtils.doWithMethods(bean.getClass(), method -> {
+            EventHandler eventHandler = method.getAnnotation(EventHandler.class);
+
+            if (eventHandler != null) {
+
+                // 设置 @EventHandler 默认属性
+                if (!StringUtils.hasText(eventHandler.cluster())) {
+                    AnnotationModifyUtils.modifyMethodAnnotation(eventHandler, CLUSTER_ATTRIBUTE, getDefaultCluster(method));
+                }
+
+                if (!StringUtils.hasText(eventHandler.topics())) {
+                    AnnotationModifyUtils.modifyMethodAnnotation(eventHandler, TOPICS_ATTRIBUTE, getDefaultTopics(method));
+                }
+
+                // 添加 Listener 至 ListenerContainer
+                addListener(bean.getClass(), method, eventHandler);
+            }
+        });
     }
 
     private String getDefaultTopics(Method method) {
@@ -83,9 +107,16 @@ public class EventHandlerAnnotationBeanPostProcessor implements BeanPostProcesso
                 .orElseThrow(() -> new IllegalStateException("Can't get default cluster"));
     }
 
-    private void addListener(Method method, EventHandler eventHandler) {
+    private void addListener(Class<?> listenerClass, Method method, EventHandler eventHandler) {
+
+        String groupId = DEFAULT_GROUP_ID_VALUE.equals(eventHandler.groupId()) ?
+                getDefaultGroupId(eventHandler) : eventHandler.groupId();
+
+        listenerContainer.putEventHandler(listenerClass.getName(), eventHandler);
+        listenerContainer.putListenerEvent(groupId, method);
+
         ListenerMetadata listenerMetadata = new ListenerMetadata();
-        listenerMetadata.setGroupId(eventHandler.groupId());
+        listenerMetadata.setGroupId(groupId);
         listenerMetadata.setTopics(eventHandler.topics());
         listenerMetadata.setCluster(eventHandler.cluster());
         listenerMetadata.setEvent(method.getParameters()[0].getType().getName());
@@ -93,29 +124,18 @@ public class EventHandlerAnnotationBeanPostProcessor implements BeanPostProcesso
         listenerContainer.addListener(listenerMetadata);
     }
 
-    private String getDefaultContainerFactory(EventHandler eventHandler) {
-        if (SpringContext.isGrayEnvironment()) {
-            return eventHandler.cluster() + "Gray" + MessageConstant.KAFKA_LISTENER_CONTAINER_FACTORY;
-        }
-        return eventHandler.cluster() + MessageConstant.KAFKA_LISTENER_CONTAINER_FACTORY;
+    public String getDefaultId(EventHandler eventHandler) {
+        String groupId = getDefaultGroupId(eventHandler);
+        int count = counterMap.computeIfAbsent(groupId, k -> new AtomicInteger()).getAndIncrement();
+        return groupId + "#" + count;
     }
 
-    private void modifyAnnotationValue(EventHandler annotation, String attribute, Object newValue) {
-        try {
-            // 获取注解的代理处理器
-            Object handler = Proxy.getInvocationHandler(annotation);
+    private String getDefaultGroupId(EventHandler eventHandler) {
+        return SpringContext.getGroupIdPrefix() + eventHandler.topics();
+    }
 
-            // 获取成员值字段
-            Field memberValuesField = handler.getClass().getDeclaredField("memberValues");
-            ReflectionUtils.makeAccessible(memberValuesField);
-
-            // 修改属性值
-            @SuppressWarnings("unchecked")
-            Map<String, Object> memberValues = (Map<String, Object>) memberValuesField.get(handler);
-            memberValues.put(attribute, newValue);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to modify EventHandler annotation", e);
-        }
+    private String getDefaultContainerFactory(EventHandler eventHandler) {
+        return eventHandler.cluster() + KAFKA_LISTENER_CONTAINER_FACTORY;
     }
 
 }

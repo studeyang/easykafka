@@ -3,10 +3,10 @@ package io.github.open.easykafka.client.support.converter;
 import com.alibaba.fastjson.JSON;
 import io.github.open.easykafka.client.event.ExampleEvent;
 import io.github.open.easykafka.client.message.Usage;
+import io.github.open.easykafka.client.support.MessageIntrospector;
+import io.github.open.easykafka.client.support.ObjectId;
 import io.github.open.easykafka.client.support.SpringContext;
-import io.github.open.easykafka.client.support.id.ObjectId;
 import io.github.open.easykafka.client.support.utils.JsonUtils;
-import io.github.open.easykafka.client.support.utils.MessageMetadataGetter;
 import org.junit.Test;
 
 import java.util.Date;
@@ -26,36 +26,36 @@ public class JsonUtilsTest {
         sub.setSubName("0.1");
         event.setSub(sub);
 
-        event.setId(ObjectId.getId())
-                .setUsage(Usage.of(event))
-                .setService(SpringContext.getService())
-                .setTopic(MessageMetadataGetter.getTopic(ExampleEvent.class))
-                .setTimeStamp(new Date());
+        event.setMessageId(ObjectId.getId())
+                .setMessageUsage(Usage.of(event))
+                .setMessageService(SpringContext.getService())
+                .setMessageTopic(MessageIntrospector.getTopic(ExampleEvent.class))
+                .setMessageCreateTime(new Date());
         System.out.println(JsonUtils.toJson(event));
     }
 
     @Test
     public void toObject() {
-        String json = "{\"@type\":\"io.github.open.easykafka.event.ExampleEvent\",\"id\":\"67ff910f020000010001b064\",\"name\":\"123\",\"sub\":{\"subName\":\"0.1\"},\"timeStamp\":\"2025-04-16 19:14:23\",\"usage\":\"EVENT\"}";
+        String json = "{\"@type\":\"io.github.open.easykafka.client.event.ExampleEvent\",\"id\":\"67ff910f020000010001b064\",\"name\":\"123\",\"sub\":{\"subName\":\"0.1\"},\"timeStamp\":\"2025-04-16 19:14:23\",\"usage\":\"EVENT\"}";
         System.out.println(JsonUtils.toObject(json, ExampleEvent.class));
     }
 
     @Test
     public void toObject_noSuchField() {
-        String json = "{\"@type\":\"io.github.open.easykafka.event.ExampleEvent\",\"testNew\":\"tt\",\"id\":\"67ff910f020000010001b064\",\"name\":\"123\",\"sub\":{\"subName\":\"0.1\"},\"timeStamp\":\"2025-04-16 19:14:23\",\"usage\":\"EVENT\"}";
+        String json = "{\"@type\":\"io.github.open.easykafka.client.event.ExampleEvent\",\"testNew\":\"tt\",\"id\":\"67ff910f020000010001b064\",\"name\":\"123\",\"sub\":{\"subName\":\"0.1\"},\"timeStamp\":\"2025-04-16 19:14:23\",\"usage\":\"EVENT\"}";
         System.out.println(JsonUtils.toObject(json, ExampleEvent.class));
     }
 
     @Test
     public void parse() {
-        String json = "{\"@type\":\"io.github.open.easykafka.event.ExampleEvent\",\"id\":\"67ff910f020000010001b064\",\"name\":\"123\",\"sub\":{\"subName\":\"0.1\"},\"timeStamp\":\"2025-04-16 19:14:23\",\"usage\":\"EVENT\"}";
+        String json = "{\"@type\":\"io.github.open.easykafka.client.event.ExampleEvent\",\"id\":\"67ff910f020000010001b064\",\"name\":\"123\",\"sub\":{\"subName\":\"0.1\"},\"timeStamp\":\"2025-04-16 19:14:23\",\"usage\":\"EVENT\"}";
         Object object = JsonUtils.parse(json);
         System.out.println(object);
     }
 
     @Test
     public void testToObject() {
-        String json = "{\"@type\":\"io.github.open.easykafka.event.ExampleEvent\",\"id\":\"67ff910f020000010001b064\",\"name\":\"123\",\"sub\":{\"subName\":\"0.1\"},\"timeStamp\":\"2025-04-16 19:14:23\",\"usage\":\"EVENT\"}";
+        String json = "{\"@type\":\"io.github.open.easykafka.client.event.ExampleEvent\",\"id\":\"67ff910f020000010001b064\",\"name\":\"123\",\"sub\":{\"subName\":\"0.1\"},\"timeStamp\":\"2025-04-16 19:14:23\",\"usage\":\"EVENT\"}";
         ExampleEvent event = JSON.parseObject(json, ExampleEvent.class);
         System.out.println(event);
     }

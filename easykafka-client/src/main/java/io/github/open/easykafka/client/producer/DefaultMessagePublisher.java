@@ -1,6 +1,7 @@
 package io.github.open.easykafka.client.producer;
 
 import io.github.open.easykafka.client.message.AbstractMessage;
+import io.github.open.easykafka.client.model.MessageMetadata;
 import io.github.open.easykafka.client.model.SendMessage;
 import io.github.open.easykafka.client.producer.sender.ISender;
 import io.github.open.easykafka.client.support.converter.SendMessageConverter;
@@ -24,10 +25,10 @@ public class DefaultMessagePublisher implements MessagePublisher {
     private final ExecutorService executorService;
 
     @Override
-    public void publish(AbstractMessage message) {
+    public void publish(Object message, MessageMetadata messageMetadata) {
         executorService.execute(() -> {
             try {
-                SendMessage sendMessage = SendMessageConverter.convert(message);
+                SendMessage sendMessage = SendMessageConverter.convert(message, messageMetadata);
                 sender.trySend(sendMessage);
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
@@ -46,4 +47,5 @@ public class DefaultMessagePublisher implements MessagePublisher {
             }
         });
     }
+
 }

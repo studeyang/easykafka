@@ -12,4 +12,8 @@ public class ProducerException extends EasyKafkaException {
         super(errorCode.getStatus(), errorCode.getDefineCode(), errorCode.getChnDesc());
     }
 
+    public ProducerException(ErrorCode errorCode, String chnDesc) {
+        super(errorCode.getStatus(), errorCode.getDefineCode(), chnDesc);
+    }
+
 }

@@ -12,4 +12,8 @@ public class InitializeException extends EasyKafkaException {
         super(errorCode.getStatus(), errorCode.getDefineCode(), errorCode.getChnDesc());
     }
 
+    public InitializeException(ErrorCode errorCode, String chnDesc) {
+        super(errorCode.getStatus(), errorCode.getDefineCode(), chnDesc);
+    }
+
 }

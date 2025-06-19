@@ -2,12 +2,13 @@ package io.github.open.easykafka.client.consumer;
 
 import com.alibaba.fastjson.JSON;
 import io.github.open.easykafka.client.message.AbstractMessage;
+import io.github.open.easykafka.client.model.MessageConstant;
 import io.github.open.easykafka.client.model.Tag;
 import io.github.open.easykafka.client.support.SpringContext;
 import io.github.open.easykafka.client.support.converter.FastJsonMessageConverter;
 import io.github.open.easykafka.client.support.properties.EasyKafkaProperties;
 import io.github.open.easykafka.client.support.properties.InitProperties;
-import io.github.open.easykafka.client.support.serializer.FastJsonDeserializer;
+import io.github.open.easykafka.client.support.serializer.MessageDeserializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -76,7 +77,7 @@ public class KafkaListenerContainerFactoryRegistrar implements BeanPostProcessor
     private void registerListenerContainerFactory(InitProperties.KafkaCluster kafkaCluster) {
 
         // 1. beanName
-        String beanName = getBeanName(kafkaCluster);
+        String beanName = getContainerFactoryBeanName(kafkaCluster);
 
         // 2. Consumer Config
         String consumerBeanName = getConsumerBeanName(kafkaCluster);
@@ -100,9 +101,8 @@ public class KafkaListenerContainerFactoryRegistrar implements BeanPostProcessor
         SpringContext.register(beanName, containerFactory);
     }
 
-    private String getBeanName(InitProperties.KafkaCluster kafkaCluster) {
-        String tag = Tag.GRAY == kafkaCluster.getTag() ? "Gray" : "";
-        return kafkaCluster.getCluster() + tag + "KafkaListenerContainerFactory";
+    private String getContainerFactoryBeanName(InitProperties.KafkaCluster kafkaCluster) {
+        return kafkaCluster.getCluster() + MessageConstant.KAFKA_LISTENER_CONTAINER_FACTORY;
     }
 
     private String getConsumerBeanName(InitProperties.KafkaCluster kafkaCluster) {
@@ -115,7 +115,7 @@ public class KafkaListenerContainerFactoryRegistrar implements BeanPostProcessor
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaCluster.getBrokers());
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, FastJsonDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, MessageDeserializer.class);
 
         return props;
     }

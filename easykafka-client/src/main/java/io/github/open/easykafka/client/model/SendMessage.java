@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * 发送消息
@@ -19,6 +20,21 @@ public class SendMessage {
      * 消息ID
      */
     private String messageId;
+
+    /**
+     * 消息主键
+     */
+    private String messageKey;
+
+    /**
+     * 消息头
+     */
+    private Map<String, Object> messageHeader;
+
+    /**
+     * 消息标签
+     */
+    private Tag messageTag;
 
     /**
      * 消息的topic

@@ -3,7 +3,7 @@ package io.github.open.easykafka.client.exception;
 /**
  * 消息异常的基类
  *
- * @author studeyang
+ * @author 005964
  */
 public class EasyKafkaException extends RuntimeException {
 
@@ -12,7 +12,7 @@ public class EasyKafkaException extends RuntimeException {
     protected final String chnDesc;
 
     public EasyKafkaException(String status, String defineCode, String chnDesc) {
-        super("错误代码=" + status + ";错误描述=" + defineCode + "|" + chnDesc);
+        super(status + "(" + defineCode + ") | " + chnDesc);
         this.status = status;
         this.defineCode = defineCode;
         this.chnDesc = chnDesc;

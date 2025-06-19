@@ -1,6 +1,7 @@
 package io.github.open.easykafka.client.producer;
 
 import io.github.open.easykafka.client.message.AbstractMessage;
+import io.github.open.easykafka.client.model.MessageMetadata;
 
 import java.util.Collection;
 
@@ -13,9 +14,10 @@ public interface MessagePublisher {
     /**
      * 发布一个消息
      *
-     * @param message 消息
+     * @param message         消息
+     * @param messageMetadata 消息元数据
      */
-    void publish(AbstractMessage message);
+    void publish(Object message, MessageMetadata messageMetadata);
 
     /**
      * 发布一批消息

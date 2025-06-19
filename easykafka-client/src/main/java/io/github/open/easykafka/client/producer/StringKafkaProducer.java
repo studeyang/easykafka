@@ -1,6 +1,5 @@
 package io.github.open.easykafka.client.producer;
 
-import io.github.open.easykafka.client.model.ProducerMetadata;
 import lombok.Getter;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
@@ -13,11 +12,11 @@ import java.util.Map;
 public class StringKafkaProducer extends KafkaProducer<String, String> {
 
     @Getter
-    private final ProducerMetadata producerMetadata;
+    private final String beanName;
 
-    public StringKafkaProducer(Map<String, Object> configs, ProducerMetadata producerMetadata) {
+    public StringKafkaProducer(Map<String, Object> configs, String beanName) {
         super(configs);
-        this.producerMetadata = producerMetadata;
+        this.beanName = beanName;
     }
 
 }

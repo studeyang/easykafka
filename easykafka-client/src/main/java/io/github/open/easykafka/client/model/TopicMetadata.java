@@ -3,6 +3,7 @@ package io.github.open.easykafka.client.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * @author <a href="https://github.com/studeyang">studeyang</a>
@@ -10,6 +11,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode
+@NoArgsConstructor
 @AllArgsConstructor
 public class TopicMetadata {
 

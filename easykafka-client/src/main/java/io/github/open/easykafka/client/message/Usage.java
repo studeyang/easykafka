@@ -1,8 +1,5 @@
 package io.github.open.easykafka.client.message;
 
-import io.github.open.easykafka.client.exception.ProducerException;
-import io.github.open.easykafka.client.model.ErrorCode;
-
 /**
  * @author <a href="https://github.com/studeyang">studeyang</a>
  * @since 1.0 2025/4/16
@@ -34,7 +31,7 @@ public enum Usage {
     /**
      * 根据类型判断是event还是broadcast
      */
-    public static Usage of(AbstractMessage message) {
+    public static Usage of(Object message) {
         if (message instanceof Event) {
             return EVENT;
         } else if (message instanceof Broadcast) {
@@ -42,6 +39,6 @@ public enum Usage {
         } else if (message instanceof DataSync) {
             return DATA_SYNC;
         }
-        throw new ProducerException(ErrorCode.UNRECOGNIZED_USAGE);
+        return null;
     }
 }

@@ -1,4 +1,4 @@
-package io.github.open.easykafka.example.handler;
+package io.github.open.easykafka.example.configuration;
 
 import com.alibaba.fastjson.JSON;
 import io.github.open.easykafka.client.message.AbstractMessage;
@@ -44,6 +44,7 @@ public class ConsumerConfiguration {
         factory.setContainerCustomizer(container -> {
             /* customize the container */
             log.info("metrics: " + JSON.toJSONString(container.metrics()));
+            container.setupMessageListener("");
         });
 
         return factory;

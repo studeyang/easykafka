@@ -3,13 +3,11 @@ package io.github.open.easykafka.client.support.converter;
 import io.github.open.easykafka.client.exception.ProducerException;
 import io.github.open.easykafka.client.message.AbstractMessage;
 import io.github.open.easykafka.client.message.Usage;
-import io.github.open.easykafka.client.model.ErrorCode;
-import io.github.open.easykafka.client.model.MessageSendResult;
-import io.github.open.easykafka.client.model.SendMessage;
+import io.github.open.easykafka.client.model.*;
+import io.github.open.easykafka.client.support.MessageIntrospector;
+import io.github.open.easykafka.client.support.ObjectId;
 import io.github.open.easykafka.client.support.SpringContext;
-import io.github.open.easykafka.client.support.id.ObjectId;
 import io.github.open.easykafka.client.support.utils.JsonUtils;
-import io.github.open.easykafka.client.support.utils.MessageMetadataGetter;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -27,10 +25,14 @@ public class SendMessageConverter {
     /**
      * Message转换为SendMessage
      *
-     * @param message 消息
+     * @param message         消息
+     * @param messageMetadata 消息元数据
      */
-    public static SendMessage convert(AbstractMessage message) {
-        return convert(message, new Date());
+    public static SendMessage convert(Object message, MessageMetadata messageMetadata) {
+        if (messageMetadata.getMessageHeaders() != null) {
+            messageMetadata.getMessageHeaders().values().forEach(MessageIntrospector::checkMessageHeaderType);
+        }
+        return convert(message, new Date(), messageMetadata);
     }
 
     /**
@@ -40,7 +42,16 @@ public class SendMessageConverter {
      */
     public static List<SendMessage> convert(Collection<? extends AbstractMessage> messages) {
         Date now = new Date();
-        return messages.stream().map(m -> convert(m, now)).collect(Collectors.toList());
+        return messages.stream()
+                .map(m -> {
+                    MessageMetadata metadata = new MessageMetadataBuilder()
+                            .topicMetadata(MessageIntrospector.getTopic(m.getClass()))
+                            .messageKey(MessageIntrospector.getMessageKey(m))
+                            .messageHeaders(MessageIntrospector.getMessageHeaders(m))
+                            .build();
+                    return convert(m, now, metadata);
+                })
+                .collect(Collectors.toList());
     }
 
     /**
@@ -62,27 +73,42 @@ public class SendMessageConverter {
                 .collect(Collectors.partitioningBy(m -> successIds.contains(m.getMessageId())));
     }
 
-    private static SendMessage convert(AbstractMessage message, Date date) {
+    private static SendMessage convert(Object message, Date date, MessageMetadata messageMetadata) {
 
         if (message == null) {
             throw new ProducerException(ErrorCode.MESSAGE_MUST_NOTNULL);
         }
 
         Class<?> clazz = message.getClass();
+        String messageId = ObjectId.getId();
+        Usage usage = Usage.of(message);
+        String service = SpringContext.getService();
+        TopicMetadata topic = messageMetadata.getTopicMetadata();
+        String messageKey = messageMetadata.getMessageKey();
+        Map<String, Object> messageHeaders = messageMetadata.getMessageHeaders();
 
-        message.setId(ObjectId.getId())
-                .setUsage(Usage.of(message))
-                .setService(SpringContext.getService())
-                .setTopic(MessageMetadataGetter.getTopic(clazz))
-                .setTimeStamp(date);
+        if (message instanceof AbstractMessage) {
+            ((AbstractMessage) message).setMessageId(messageId)
+                    .setMessageKey(messageKey)
+                    .setMessageHeader(messageHeaders)
+                    .setMessageTag(messageMetadata.getMessageTag())
+                    .setMessageUsage(usage)
+                    .setMessageService(service)
+                    .setMessageTopic(topic)
+                    .setMessageCreateTime(date);
+        }
 
         return new SendMessage()
-                .setMessageId(message.getId())
-                .setTopic(message.getTopic())
+                .setMessageId(messageId)
+                .setMessageKey(messageKey)
+                .setMessageHeader(messageHeaders)
+                .setMessageTag(messageMetadata.getMessageTag())
+                .setTopic(topic)
                 .setType(clazz.getName())
-                .setService(message.getService())
+                .setService(service)
                 .setContent(JsonUtils.toJson(message))
-                .setCreatedAt(message.getTimeStamp())
-                .setUsage(message.getUsage());
+                .setCreatedAt(date)
+                .setUsage(usage);
     }
+
 }

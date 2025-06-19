@@ -1,7 +1,6 @@
 package io.github.open.easykafka.client.producer;
 
 import com.alibaba.fastjson.JSON;
-import io.github.open.easykafka.client.model.ProducerMetadata;
 import io.github.open.easykafka.client.model.Tag;
 import io.github.open.easykafka.client.support.SpringContext;
 import io.github.open.easykafka.client.support.properties.EasyKafkaProperties;
@@ -52,32 +51,39 @@ public class ProducerBeanRegistrar implements BeanDefinitionRegistryPostProcesso
         for (InitProperties.KafkaCluster kafkaCluster : easyKafkaProperties.getInit().getKafkaCluster()) {
             Assert.notNull(kafkaCluster.getCluster(),
                     "easykafka.init.kafkaCluster.cluster is null. Please check your config: " + JSON.toJSONString(kafkaCluster));
-            if (SpringContext.isGrayEnvironment()) {
-                registerGrayProducer(kafkaCluster, registry);
-            } else {
-                registerBaseProducer(kafkaCluster, registry);
-            }
+            registerAdaptiveProducer(kafkaCluster, registry);
+            registerBaseProducer(kafkaCluster, registry);
+            registerGrayProducer(kafkaCluster, registry);
         }
     }
 
-
     private void registerBaseProducer(InitProperties.KafkaCluster kafkaCluster, BeanDefinitionRegistry registry) {
         if (kafkaCluster.getTag() == Tag.BASE) {
-            registerProducer(kafkaCluster, registry);
+            registerProducer(kafkaCluster.getCluster() + "BaseProducer", kafkaCluster, registry);
         }
     }
 
     private void registerGrayProducer(InitProperties.KafkaCluster kafkaCluster, BeanDefinitionRegistry registry) {
         if (kafkaCluster.getTag() == Tag.GRAY) {
-            registerProducer(kafkaCluster, registry);
+            registerProducer(kafkaCluster.getCluster() + "GrayProducer", kafkaCluster, registry);
         }
     }
 
-    private void registerProducer(InitProperties.KafkaCluster kafkaCluster, BeanDefinitionRegistry registry) {
-        // 1. beanName
-        String beanName = getBeanName(kafkaCluster);
+    private void registerAdaptiveProducer(InitProperties.KafkaCluster kafkaCluster, BeanDefinitionRegistry registry) {
+        String beanName = kafkaCluster.getCluster() + "Producer";
+        if (SpringContext.isGrayEnvironment()) {
+            if (kafkaCluster.getTag() == Tag.GRAY) {
+                registerProducer(beanName, kafkaCluster, registry);
+            }
+        } else {
+            if (kafkaCluster.getTag() == Tag.BASE) {
+                registerProducer(beanName, kafkaCluster, registry);
+            }
+        }
+    }
 
-        // 2. Producer Config
+    private void registerProducer(String beanName, InitProperties.KafkaCluster kafkaCluster, BeanDefinitionRegistry registry) {
+        // 1. Producer Config
         InitProperties.Producer producerConfig = producerMap.get(beanName);
         Map<String, Object> props = getDefaultProducerConfig(kafkaCluster);
         Optional.ofNullable(producerConfig)
@@ -85,28 +91,17 @@ public class ProducerBeanRegistrar implements BeanDefinitionRegistryPostProcesso
                 .ifPresent(props::putAll);
         log.info("[EasyKafka] Producer Config: {} --> {}", beanName, JSON.toJSONString(props));
 
-        // 3. Inject Bean
+        // 2. Inject Bean
         RootBeanDefinition beanDefinition = new RootBeanDefinition();
         beanDefinition.setBeanClass(StringKafkaProducer.class);
         beanDefinition.setDestroyMethodName("close");
         // 设置构造参数
         ConstructorArgumentValues args = new ConstructorArgumentValues();
         args.addIndexedArgumentValue(0, props);
-        args.addIndexedArgumentValue(1, getProducerMetadata(kafkaCluster));
+        args.addIndexedArgumentValue(1, beanName);
         beanDefinition.setConstructorArgumentValues(args);
 
         registry.registerBeanDefinition(beanName, beanDefinition);
-    }
-
-    private String getBeanName(InitProperties.KafkaCluster kafkaCluster) {
-        String tag = Tag.GRAY == kafkaCluster.getTag() ? "Gray" : "";
-        return kafkaCluster.getCluster() + tag + "Producer";
-    }
-
-    private ProducerMetadata getProducerMetadata(InitProperties.KafkaCluster kafkaCluster) {
-        ProducerMetadata producerMetadata = new ProducerMetadata(kafkaCluster.getCluster(), kafkaCluster.getTag());
-        producerMetadata.setBean(getBeanName(kafkaCluster));
-        return producerMetadata;
     }
 
     private Map<String, Object> getDefaultProducerConfig(InitProperties.KafkaCluster kafkaCluster) {

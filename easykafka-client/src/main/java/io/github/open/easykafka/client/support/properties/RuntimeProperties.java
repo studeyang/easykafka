@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Data
 public class RuntimeProperties {
     private Producer producer = new Producer();
-    private Consumer consumer;
+    private Consumer consumer = new Consumer();
 
     @Data
     public static class Producer {
@@ -25,8 +25,8 @@ public class RuntimeProperties {
     }
 
     @Data
-    private static class Consumer {
-
+    public static class Consumer {
+        private String groupIdPrefix;
     }
 
 }

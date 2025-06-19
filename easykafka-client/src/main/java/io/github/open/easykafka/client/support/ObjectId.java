@@ -1,4 +1,4 @@
-package io.github.open.easykafka.client.support.id;
+package io.github.open.easykafka.client.support;
 
 import io.github.open.easykafka.client.support.utils.IpUtils;
 

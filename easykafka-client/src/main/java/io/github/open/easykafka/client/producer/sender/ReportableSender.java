@@ -51,7 +51,7 @@ public class ReportableSender implements ISender, Reportable {
     @Override
     public void onSuccess(SendMessage successMessage) {
         if (successMessage != null) {
-            log.info("kafka发送消息成功, message:{}", successMessage.getContent());
+            log.info("kafka发送消息成功 {}", successMessage);
         }
     }
 
@@ -59,7 +59,7 @@ public class ReportableSender implements ISender, Reportable {
     public void onSuccess(List<SendMessage> successMessageList) {
         if (CollectionUtils.isNotEmpty(successMessageList)) {
             for (int i = 0; i < successMessageList.size(); i++) {
-                log.info("kafka发送批量消息成功, message-{}: {}", i + 1, successMessageList.get(i).getContent());
+                log.info("kafka发送批量消息成功, message-{}: {}", i + 1, successMessageList.get(i));
             }
         }
     }
@@ -67,7 +67,7 @@ public class ReportableSender implements ISender, Reportable {
     @Override
     public void onFail(SendMessage failMessage) {
         if (failMessage != null) {
-            log.error("kafka发送消息失败, message:{}", failMessage.getContent());
+            log.error("kafka发送消息失败 {}", failMessage);
         }
     }
 
@@ -75,7 +75,7 @@ public class ReportableSender implements ISender, Reportable {
     public void onFail(List<SendMessage> failMessages) {
         if (CollectionUtils.isNotEmpty(failMessages)) {
             for (int i = 0; i < failMessages.size(); i++) {
-                log.error("kafka发送批量消息失败, message-{}: {}", i + 1, failMessages.get(i).getContent());
+                log.error("kafka发送批量消息失败, message-{}: {}", i + 1, failMessages.get(i));
             }
         }
     }

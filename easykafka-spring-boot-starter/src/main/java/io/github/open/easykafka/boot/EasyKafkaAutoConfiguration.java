@@ -2,6 +2,7 @@ package io.github.open.easykafka.boot;
 
 import com.alibaba.ttl.threadpool.TtlExecutors;
 import io.github.open.easykafka.client.EventPublisher;
+import io.github.open.easykafka.client.ObjectPublisher;
 import io.github.open.easykafka.client.consumer.EventHandlerAnnotationBeanPostProcessor;
 import io.github.open.easykafka.client.consumer.KafkaListenerContainerFactoryRegistrar;
 import io.github.open.easykafka.client.consumer.ListenerContainer;
@@ -22,9 +23,10 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.retry.annotation.EnableRetry;
 
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -66,8 +68,8 @@ public class EasyKafkaAutoConfiguration {
         }
 
         @Bean
-        public ProducerContainer producerContainer(List<StringKafkaProducer> producerList) {
-            return new ProducerContainer(producerList);
+        public ProducerContainer producerContainer(Map<String, StringKafkaProducer> producerMap) {
+            return new ProducerContainer(producerMap);
         }
 
         @Bean
@@ -91,6 +93,7 @@ public class EasyKafkaAutoConfiguration {
 
         private void setPublisher(MessagePublisher defaultMessagePublisher) {
             EventPublisher.setPublisher(defaultMessagePublisher);
+            ObjectPublisher.setPublisher(defaultMessagePublisher);
         }
     }
 
@@ -103,8 +106,8 @@ public class EasyKafkaAutoConfiguration {
         }
 
         @Bean
-        public ListenerContainer listenerContainer() {
-            return new ListenerContainer();
+        public ListenerContainer listenerContainer(KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry) {
+            return new ListenerContainer(kafkaListenerEndpointRegistry);
         }
 
         @Bean

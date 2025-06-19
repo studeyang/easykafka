@@ -1,19 +1,13 @@
 package io.github.open.easykafka.client.producer;
 
-import com.alibaba.fastjson.JSON;
 import io.github.open.easykafka.client.exception.ProducerException;
-import io.github.open.easykafka.client.model.ProducerMetadata;
 import io.github.open.easykafka.client.model.Tag;
-import io.github.open.easykafka.client.support.SpringContext;
-import io.github.open.easykafka.client.model.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+
+import static io.github.open.easykafka.client.model.ErrorCode.PRODUCER_NOT_FOUND;
 
 /**
  * @author <a href="https://github.com/studeyang">studeyang</a>
@@ -22,32 +16,33 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProducerContainer implements InitializingBean {
 
-    private final Map<ProducerMetadata, StringKafkaProducer> producerMap;
+    private final Map<String, StringKafkaProducer> producerMap;
 
-    public ProducerContainer(List<StringKafkaProducer> producerList) {
-        this.producerMap = producerList.stream()
-                .collect(Collectors.toMap(StringKafkaProducer::getProducerMetadata, Function.identity()));
+    public ProducerContainer(Map<String, StringKafkaProducer> producerMap) {
+        this.producerMap = producerMap;
     }
 
-    public StringKafkaProducer getProducer(String cluster) {
-        Tag tag = SpringContext.isGrayEnvironment() ? Tag.GRAY : Tag.BASE;
+    public StringKafkaProducer getProducer(String cluster, Tag tag) {
+        if (Tag.BASE == tag) {
+            return getProducerByBeanName(cluster + "BaseProducer");
+        } else if (Tag.GRAY == tag) {
+            return getProducerByBeanName(cluster + "GrayProducer");
+        } else {
+            return getProducerByBeanName(cluster + "Producer");
+        }
+    }
 
-        ProducerMetadata producerMetadata = new ProducerMetadata(cluster, tag);
-        StringKafkaProducer kafkaProducer = producerMap.get(producerMetadata);
-
+    private StringKafkaProducer getProducerByBeanName(String beanName) {
+        StringKafkaProducer kafkaProducer = producerMap.get(beanName);
         if (kafkaProducer == null) {
-            throw new ProducerException(ErrorCode.PRODUCER_NOT_FOUND);
+            throw new ProducerException(PRODUCER_NOT_FOUND);
         }
         return kafkaProducer;
     }
 
     @Override
     public void afterPropertiesSet() {
-        String result = "[EasyKafka] ProducerContainer:\n" +
-                producerMap.keySet().stream()
-                        .sorted(Comparator.comparing(ProducerMetadata::getTag))
-                        .map(JSON::toJSONString)
-                        .collect(Collectors.joining("\n"));
+        String result = "[EasyKafka] ProducerContainer:\n" + producerMap.keySet();
         log.info(result);
     }
 }

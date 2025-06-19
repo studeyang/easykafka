@@ -7,7 +7,6 @@ import io.github.open.easykafka.client.model.SendMessage;
 import io.github.open.easykafka.client.producer.ProducerContainer;
 import io.github.open.easykafka.client.producer.StringKafkaProducer;
 import io.github.open.easykafka.client.support.converter.ExceptionConverter;
-import io.github.open.easykafka.client.model.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +14,12 @@ import org.apache.commons.collections4.ListUtils;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +28,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static io.github.open.easykafka.client.model.ErrorCode.PRODUCER_ERROR;
 
 /**
  * @author <a href="https://github.com/studeyang">studeyang</a>
@@ -56,7 +61,8 @@ public class ProducerSender implements ISender {
         ProducerRecord<String, String> producerRecord = creatRecord(message);
 
         try {
-            StringKafkaProducer producer = producerContainer.getProducer(message.getTopic().getCluster());
+            StringKafkaProducer producer = producerContainer.getProducer(message.getTopic().getCluster(),
+                    message.getMessageTag());
             producer.send(producerRecord).get(TIMEOUT, TimeUnit.MILLISECONDS);
             return MessageSendResult.success(message.getMessageId());
         } catch (ProducerException e) {
@@ -65,10 +71,10 @@ public class ProducerSender implements ISender {
         } catch (InterruptedException e) {
             log.warn(SEND_ERROR, e.getMessage(), e);
             Thread.currentThread().interrupt();
-            throw new ProducerException(ErrorCode.PRODUCER_ERROR);
+            throw new ProducerException(PRODUCER_ERROR);
         } catch (Exception e) {
             log.warn(SEND_ERROR, e.getMessage(), e);
-            throw new ProducerException(ErrorCode.PRODUCER_ERROR);
+            throw new ProducerException(PRODUCER_ERROR);
         }
     }
 
@@ -106,7 +112,8 @@ public class ProducerSender implements ISender {
         for (SendMessage message : messages) {
             ProducerRecord<String, String> producerRecord = creatRecord(message);
             try {
-                StringKafkaProducer producer = producerContainer.getProducer(messages.get(0).getTopic().getCluster());
+                StringKafkaProducer producer = producerContainer.getProducer(messages.get(0).getTopic().getCluster(),
+                        message.getMessageTag());
                 futureMap.put(message.getMessageId(), producer.send(producerRecord));
             } catch (Exception e) {
                 log.warn("批量发送kafka失败: {}, message:{}", e.getMessage(), message);
@@ -152,7 +159,6 @@ public class ProducerSender implements ISender {
         assertHasText(message.getService(), "service不能为空");
         assertHasText(message.getContent(), "content不能为空");
         assertNotNull(message.getCreatedAt(), "createdAt不能为空");
-        assertNotNull(message.getUsage(), "usage不能为空");
     }
 
     private void assertNotNull(Object object, String message) {
@@ -169,11 +175,21 @@ public class ProducerSender implements ISender {
 
     private ProducerRecord<String, String> creatRecord(SendMessage message) {
         List<Header> headers = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(message.getMessageHeader())) {
+            message.getMessageHeader().forEach((name, value) -> {
+                if (value instanceof String) {
+                    headers.add(new RecordHeader(name, ((String) value).getBytes(StandardCharsets.UTF_8)));
+                } else if (value instanceof Integer) {
+                    headers.add(new RecordHeader(name, ByteBuffer.allocate(4).putInt((Integer) value).array()));
+                }
+            });
+        }
+
         return new ProducerRecord<>(
                 message.getTopic().getName(),
                 null,
                 message.getCreatedAt().getTime(),
-                message.getMessageId(),
+                message.getMessageKey() != null ? message.getMessageKey() : message.getMessageId(),
                 message.getContent(),
                 headers);
     }

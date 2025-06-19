@@ -1,7 +1,6 @@
 package io.github.open.easykafka.client.support.serializer;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
 import io.github.open.easykafka.client.message.AbstractMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,7 @@ import java.util.Arrays;
  * @since 1.0 2025/4/23
  */
 @Slf4j
-public class FastJsonDeserializer implements Deserializer<AbstractMessage> {
+public class MessageDeserializer implements Deserializer<AbstractMessage> {
 
     @Override
     public AbstractMessage deserialize(String topic, byte[] data) {
@@ -26,7 +25,7 @@ public class FastJsonDeserializer implements Deserializer<AbstractMessage> {
             Object object = JSON.parse(jsonData, Feature.SupportAutoType);
             if (object instanceof AbstractMessage) {
                 return (AbstractMessage) object;
-            } else if (object instanceof JSONObject) {
+            } else {
                 log.error("Can't deserialize data [{}] from topic [{}]", jsonData, topic);
             }
         } catch (Exception e) {
