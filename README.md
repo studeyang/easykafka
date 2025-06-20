@@ -94,7 +94,7 @@ public class EventPublisherTest {
 <!-- 消息定义 -->
 <dependency>
     <groupId>io.github.studeyang</groupId>
-    <artifactId>es-send-basic-api</artifactId>
+    <artifactId>example-sdk</artifactId>
 </dependency>
 ```
 
@@ -105,8 +105,9 @@ import io.github.open.easykafka.client.annotation.EventHandler;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SingleEventHandler {
-    @EventHandler
+@EventHandler(cluster = "send", topics = "easykafka-example-topic")
+public class ExampleEventHandler {
+    @KafkaHandler
     public void handle(ExampleEvent event) {
         System.out.println("收到了一条消息: " + event);
     }
