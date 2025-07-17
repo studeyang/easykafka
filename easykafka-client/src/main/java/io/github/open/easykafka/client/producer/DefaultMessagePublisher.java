@@ -3,6 +3,7 @@ package io.github.open.easykafka.client.producer;
 import io.github.open.easykafka.client.message.AbstractMessage;
 import io.github.open.easykafka.client.model.MessageMetadata;
 import io.github.open.easykafka.client.model.SendMessage;
+import io.github.open.easykafka.client.producer.callback.MessageCallback;
 import io.github.open.easykafka.client.producer.sender.ISender;
 import io.github.open.easykafka.client.support.converter.SendMessageConverter;
 import lombok.RequiredArgsConstructor;
@@ -25,25 +26,29 @@ public class DefaultMessagePublisher implements MessagePublisher {
     private final ExecutorService executorService;
 
     @Override
-    public void publish(Object message, MessageMetadata messageMetadata) {
+    public void publish(Object message, MessageMetadata messageMetadata, MessageCallback messageCallback) {
         executorService.execute(() -> {
             try {
                 SendMessage sendMessage = SendMessageConverter.convert(message, messageMetadata);
                 sender.trySend(sendMessage);
+                messageCallback.onSuccess();
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
+                messageCallback.onFail(e);
             }
         });
     }
 
     @Override
-    public void publish(Collection<? extends AbstractMessage> messages) {
+    public void publish(Collection<? extends AbstractMessage> messages, MessageCallback messageCallback) {
         executorService.execute(() -> {
             try {
                 List<SendMessage> sendMessageList = SendMessageConverter.convert(messages);
                 sender.trySend(sendMessageList);
+                messageCallback.onSuccess();
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
+                messageCallback.onFail(e);
             }
         });
     }

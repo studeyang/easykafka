@@ -5,6 +5,8 @@ import io.github.open.easykafka.client.model.TopicMetadata;
 import io.github.open.easykafka.client.support.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.Headers;
 import org.springframework.kafka.listener.RecordInterceptor;
 import org.springframework.kafka.support.KafkaUtils;
 
@@ -25,17 +27,27 @@ public class ListenedRecordInterceptor implements RecordInterceptor<String, Abst
         if (message == null) {
             return null;
         }
-        // 提交位移时, 提交的是 offset+1
-        log.info("Received Offset=[{}] Message: {}", consumerRecord.offset(), JsonUtils.toJson(consumerRecord.value()));
         if (!ListenerContainer.isListenOn(message)) {
             TopicMetadata topicMetadata = Optional.of(message)
                     .map(AbstractMessage::getMessageTopic)
                     .orElse(new TopicMetadata());
-            log.error("EventHandler On [{}] Not Found! Current GroupId=[{}] On Cluster=[{}] Topic=[{}]", message.getClass().getName(),
+            log.warn("Event Not Found In {}! GroupId={} Cluster={} Topic={}", message.getClass().getName(),
                     KafkaUtils.getConsumerGroupId(), topicMetadata.getCluster(), topicMetadata.getName());
             return null;
         }
+        String traceId = getHeaderValue(consumerRecord.headers(), "Pinpoint-TraceID");
+        String spanId = getHeaderValue(consumerRecord.headers(), "Pinpoint-SpanID");
+        // 提交位移时, 提交的是 offset+1
+        log.info("[traceId={}, spanId={}] Received A Message Offset={} Content={}", traceId, spanId, consumerRecord.offset(), JsonUtils.toJson(consumerRecord.value()));
         return consumerRecord;
+    }
+
+    private String getHeaderValue(Headers headers, String headerKey) {
+        return Optional.ofNullable(headers)
+                .map(hs -> hs.lastHeader(headerKey))
+                .map(Header::value)
+                .map(String::new)
+                .orElse("");
     }
 
 }

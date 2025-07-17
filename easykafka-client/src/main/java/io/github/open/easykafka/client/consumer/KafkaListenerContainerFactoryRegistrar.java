@@ -5,7 +5,6 @@ import io.github.open.easykafka.client.message.AbstractMessage;
 import io.github.open.easykafka.client.model.MessageConstant;
 import io.github.open.easykafka.client.model.Tag;
 import io.github.open.easykafka.client.support.SpringContext;
-import io.github.open.easykafka.client.support.converter.FastJsonMessageConverter;
 import io.github.open.easykafka.client.support.properties.EasyKafkaProperties;
 import io.github.open.easykafka.client.support.properties.InitProperties;
 import io.github.open.easykafka.client.support.serializer.MessageDeserializer;
@@ -91,7 +90,6 @@ public class KafkaListenerContainerFactoryRegistrar implements BeanPostProcessor
         // 3. Inject Bean
         ConcurrentKafkaListenerContainerFactory<String, AbstractMessage> containerFactory = new ConcurrentKafkaListenerContainerFactory<>();
 
-        containerFactory.setMessageConverter(new FastJsonMessageConverter());
         containerFactory.setRecordInterceptor(new ListenedRecordInterceptor());
         containerFactory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
 

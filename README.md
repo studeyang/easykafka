@@ -106,7 +106,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @EventHandler(cluster = "send", topics = "easykafka-example-topic")
-public class ExampleEventHandler {
+public class ExampleEventHandler implements IEventHandler {
     @KafkaHandler
     public void handle(ExampleEvent event) {
         System.out.println("收到了一条消息: " + event);

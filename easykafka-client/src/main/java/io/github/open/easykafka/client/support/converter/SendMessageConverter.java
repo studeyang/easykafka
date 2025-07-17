@@ -106,9 +106,17 @@ public class SendMessageConverter {
                 .setTopic(topic)
                 .setType(clazz.getName())
                 .setService(service)
-                .setContent(JsonUtils.toJson(message))
+                .setContent(getContentByType(message))
                 .setCreatedAt(date)
                 .setUsage(usage);
+    }
+
+    private static String getContentByType(Object message) {
+        if (message instanceof String) {
+            return (String) message;
+        } else {
+            return JsonUtils.toJson(message);
+        }
     }
 
 }

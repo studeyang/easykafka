@@ -4,6 +4,8 @@ import io.github.open.easykafka.client.message.Event;
 import io.github.open.easykafka.client.model.MessageMetadata;
 import io.github.open.easykafka.client.model.MessageMetadataBuilder;
 import io.github.open.easykafka.client.producer.MessagePublisher;
+import io.github.open.easykafka.client.producer.callback.DefaultMessageCallback;
+import io.github.open.easykafka.client.producer.callback.MessageCallback;
 import io.github.open.easykafka.client.support.MessageIntrospector;
 import lombok.Setter;
 import lombok.experimental.UtilityClass;
@@ -26,13 +28,20 @@ public final class EventPublisher {
      * 发布一个事件
      */
     public static void publish(Event event) {
+        publish(event, new DefaultMessageCallback());
+    }
+
+    /**
+     * 发布一个事件
+     */
+    public static void publish(Event event, MessageCallback messageCallback) {
         try {
             MessageMetadata metadata = new MessageMetadataBuilder()
                     .topicMetadata(MessageIntrospector.getTopic(event.getClass()))
                     .messageKey(MessageIntrospector.getMessageKey(event))
                     .messageHeaders(MessageIntrospector.getMessageHeaders(event))
                     .build();
-            publisher.publish(event, metadata);
+            publisher.publish(event, metadata, messageCallback);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
@@ -42,7 +51,7 @@ public final class EventPublisher {
      * 发布一批事件
      */
     public static void publish(Collection<? extends Event> events) {
-        publisher.publish(events);
+        publisher.publish(events, new DefaultMessageCallback());
     }
 
 }

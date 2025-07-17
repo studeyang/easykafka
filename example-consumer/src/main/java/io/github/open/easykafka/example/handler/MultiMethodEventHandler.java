@@ -9,6 +9,7 @@ import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.messaging.handler.annotation.Header;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 /**
  * @author <a href="https://github.com/studeyang">studeyang</a>
@@ -19,8 +20,8 @@ import java.nio.ByteBuffer;
 public class MultiMethodEventHandler implements IEventHandler {
 
     @KafkaHandler
-    public void handle(ExampleEvent event, @Header("retryCount") ByteBuffer retryCount) {
-        log.info("收到消息 retryCount: {}, message: {}", retryCount.getInt(), event);
+    public void handle(ExampleEvent event, @Header(value = "retryCount", required = false) ByteBuffer retryCount) {
+        log.info("收到消息 retryCount: {}, message: {}", Optional.ofNullable(retryCount).map(ByteBuffer::getInt).orElse(0), event);
     }
 
     @KafkaHandler
