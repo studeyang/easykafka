@@ -11,7 +11,9 @@
   <a href="https://zdoc.app/zh/studeyang/easykafka">中文</a>
 </p>
 
-# 🤔 easykafka
+# easykafka
+
+## 一、🤔 简介
 
 EasyKafka 是基于 Spring Kafka 的增强，原 Spring Kafka 所有功能完全适配。
 
@@ -23,12 +25,12 @@ EasyKafka 的建设目标：使消息的发送和接收更简单。
 - 封装基线与灰度环境兼容的复杂度
 - 统一消息重试
 
-## 🖥️ 一、开发环境
+## 二、🖥️ 开发环境
 
 - Java 8
 - Maven 3.6.3
 
-## 🚀 二、快速开始
+## 三、🚀 快速开始
 
 ### 3.1 发送消息
 
