@@ -1,4 +1,17 @@
-# easykafka
+<p align="center">
+  <!-- Keep these links. Translations will automatically update with the README. -->
+  <a href="https://zdoc.app/de/studeyang/easykafka">Deutsch</a> | 
+  <a href="https://zdoc.app/en/studeyang/easykafka">English</a> | 
+  <a href="https://zdoc.app/es/studeyang/easykafka">Español</a> | 
+  <a href="https://zdoc.app/fr/studeyang/easykafka">français</a> | 
+  <a href="https://zdoc.app/ja/studeyang/easykafka">日本語</a> | 
+  <a href="https://zdoc.app/ko/studeyang/easykafka">한국어</a> | 
+  <a href="https://zdoc.app/pt/studeyang/easykafka">Português</a> | 
+  <a href="https://zdoc.app/ru/studeyang/easykafka">Русский</a> | 
+  <a href="https://zdoc.app/zh/studeyang/easykafka">中文</a>
+</p>
+
+# 🤔 easykafka
 
 EasyKafka 是基于 Spring Kafka 的增强，原 Spring Kafka 所有功能完全适配。
 
@@ -10,16 +23,16 @@ EasyKafka 的建设目标：使消息的发送和接收更简单。
 - 封装基线与灰度环境兼容的复杂度
 - 统一消息重试
 
-## 一、开发环境
+## 🖥️ 一、开发环境
 
 - Java 8
 - Maven 3.6.3
 
-## 二、快速开始
+## 🚀 二、快速开始
 
 ### 3.1 发送消息
 
-示例：[EventPublisherTest](example-producer/src/test/java/io/github/open/easykafka/example/EventPublisherTest.java) `sendExampleEvent` 方法
+示例：[EventPublisherTest](example-producer/src/test/java/io/github/open/easykafka/example/producer/EventPublisherTest.java) `sendExampleEvent` 方法
 
 **1、引入依赖**
 
@@ -78,7 +91,7 @@ public class EventPublisherTest {
 
 ### 3.2 消费消息
 
-示例：[SingleEventHandler](example-consumer/src/main/java/io/github/open/easykafka/example/handler/SingleEventHandler.java)
+示例：[MultiMethodEventHandler](example-consumer/src/main/java/io/github/open/easykafka/example/handler/MultiMethodEventHandler.java)
 
 **1、引入依赖**
 
