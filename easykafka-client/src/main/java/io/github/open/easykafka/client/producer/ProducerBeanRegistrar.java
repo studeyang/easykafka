@@ -57,18 +57,31 @@ public class ProducerBeanRegistrar implements BeanDefinitionRegistryPostProcesso
         }
     }
 
+    /**
+     * 注册基线环境的 Producer <br/>
+     * 命名规则: {cluster} + BaseProducer
+     */
     private void registerBaseProducer(InitProperties.KafkaCluster kafkaCluster, BeanDefinitionRegistry registry) {
         if (kafkaCluster.getTag() == Tag.BASE) {
             registerProducer(kafkaCluster.getCluster() + "BaseProducer", kafkaCluster, registry);
         }
     }
 
+    /**
+     * 注册灰度环境的 Producer <br/>
+     * 命名规则: {cluster} + GrayProducer
+     */
     private void registerGrayProducer(InitProperties.KafkaCluster kafkaCluster, BeanDefinitionRegistry registry) {
         if (kafkaCluster.getTag() == Tag.GRAY) {
             registerProducer(kafkaCluster.getCluster() + "GrayProducer", kafkaCluster, registry);
         }
     }
 
+    /**
+     * 注册自适应的 Producer <br/>
+     * 如果当前运行的是灰度环境，则 {cluster} + Producer 初始化的是灰度的 brokers <br/>
+     * 否则 {cluster} + Producer 初始化的是基线的 brokers
+     */
     private void registerAdaptiveProducer(InitProperties.KafkaCluster kafkaCluster, BeanDefinitionRegistry registry) {
         String beanName = kafkaCluster.getCluster() + "Producer";
         if (SpringContext.isGrayEnvironment()) {
@@ -104,6 +117,9 @@ public class ProducerBeanRegistrar implements BeanDefinitionRegistryPostProcesso
         registry.registerBeanDefinition(beanName, beanDefinition);
     }
 
+    /**
+     * 默认的 Producer 配置
+     */
     private Map<String, Object> getDefaultProducerConfig(InitProperties.KafkaCluster kafkaCluster) {
         Map<String, Object> props = new HashMap<>(4);
 

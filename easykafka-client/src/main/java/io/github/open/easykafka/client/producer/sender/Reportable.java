@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * 消息报告
- * @author studeyang
+ * @author <a href="https://github.com/studeyang">studeyang</a>
  */
 public interface Reportable {
 

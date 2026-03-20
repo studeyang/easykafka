@@ -15,7 +15,7 @@ import org.springframework.util.StringUtils;
 /**
  * Spring容器上下文
  *
- * @author studeyang
+ * @author <a href="https://github.com/studeyang">studeyang</a>
  */
 @Slf4j
 public final class SpringContext implements ApplicationContextAware {

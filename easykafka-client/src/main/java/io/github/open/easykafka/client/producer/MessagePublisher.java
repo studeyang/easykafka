@@ -8,7 +8,7 @@ import java.util.Collection;
 
 /**
  * 消息发布器
- * @author studeyang
+ * @author <a href="https://github.com/studeyang">studeyang</a>
  */
 public interface MessagePublisher {
 

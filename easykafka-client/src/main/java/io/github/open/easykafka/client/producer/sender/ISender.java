@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * 请求发送器
- * @author studeyang
+ * @author <a href="https://github.com/studeyang">studeyang</a>
  */
 public interface ISender {
 

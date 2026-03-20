@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * 发送消息
  *
- * @author studeyang
+ * @author <a href="https://github.com/studeyang">studeyang</a>
  */
 @Data
 @Accessors(chain = true)

@@ -24,7 +24,7 @@ public class MessageConstant {
 
     // -------------------------------- consumer -------------------------------------------
 
-    public static final String KAFKA_LISTENER_CONTAINER_FACTORY = "KafkaListenerContainerFactory";
+    public static final String KAFKA_LISTENER_CONTAINER_FACTORY = "EasyKafkaListenerContainerFactory";
     public static final String DEFAULT_GROUP_ID_VALUE = "#{__listener.groupId}";
     public static final String DEFAULT_ID_VALUE = "#{__listener.id}";
     public static final String DEFAULT_ERROR_HANDLER_VALUE = "#{__listener.errorHandler}";

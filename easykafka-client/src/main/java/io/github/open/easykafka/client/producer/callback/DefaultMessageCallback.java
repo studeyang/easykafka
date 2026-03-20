@@ -8,11 +8,11 @@ public class DefaultMessageCallback implements MessageCallback {
 
     @Override
     public void onFail(Exception exception) {
-
+        // do nothing
     }
 
     @Override
     public void onSuccess() {
-
+        // do nothing
     }
 }

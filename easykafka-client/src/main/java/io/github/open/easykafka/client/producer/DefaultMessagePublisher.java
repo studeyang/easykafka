@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * 默认的消息发布器, 消息将直接发送到Producer
  *
- * @author studeyang
+ * @author <a href="https://github.com/studeyang">studeyang</a>
  */
 @Slf4j
 @RequiredArgsConstructor

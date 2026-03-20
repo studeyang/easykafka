@@ -7,6 +7,9 @@ package io.github.open.easykafka.client.producer.callback;
 @FunctionalInterface
 public interface FailCallback extends MessageCallback {
 
+    /**
+     * 失败回调
+     */
     @Override
     default void onSuccess() {}
 

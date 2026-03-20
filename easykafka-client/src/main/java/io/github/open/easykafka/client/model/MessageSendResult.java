@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 
 /**
  * 发送消息的结果
- * @author studeyang
+ * @author <a href="https://github.com/studeyang">studeyang</a>
  */
 @Data
 @Accessors(chain = true)

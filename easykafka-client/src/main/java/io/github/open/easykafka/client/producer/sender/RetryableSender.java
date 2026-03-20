@@ -11,7 +11,7 @@ import org.springframework.retry.support.RetryTemplate;
 import java.util.List;
 
 /**
- * @author studeyang
+ * @author <a href="https://github.com/studeyang">studeyang</a>
  */
 @Slf4j
 public class RetryableSender implements ISender {
