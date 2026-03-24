@@ -436,7 +436,7 @@ easykafka:
   init:
     kafkaCluster:
       - cluster: send              # 逻辑集群名称（与 @Topic/@EventHandler 对应）
-        brokers: host:9092         # Broker 地址，多个用逗号分隔
+        brokers: 127.0.0.1:9092    # Broker 地址，多个用逗号分隔
         tag: BASE                  # 标签：BASE（默认）或 GRAY
 ```
 
