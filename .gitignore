@@ -27,3 +27,4 @@ replay_pid*
 .idea/
 target/
 application-fc.properties
+.claude/settings.local.json

@@ -46,17 +46,17 @@ public final class SpringContext implements ApplicationContextAware {
         String groupIdPrefix = context.getBean(EasyKafkaProperties.class).getRuntime().getConsumer().getGroupIdPrefix();
         if (StringUtils.hasText(groupIdPrefix)) {
             setGroupIdPrefix(groupIdPrefix);
-        }
-
-        try {
-            String serviceName = SpringContext.getService();
-            int lastDashIndex = serviceName.lastIndexOf("-");
-            String lastPart = serviceName.substring(lastDashIndex + 1);
-            // 示例: Send-Post.Biz-Post-RouteStaff
-            // 该消费者组表示: 寄件使用Post服务消费Biz-Post-RouteStaff这个Topic
-            setGroupIdPrefix("Send-" + Character.toUpperCase(lastPart.charAt(0)) + lastPart.substring(1) + ".");
-        } catch (Exception e) {
-            throw new IllegalStateException("Can't get default groupId");
+        } else {
+            try {
+                String serviceName = SpringContext.getService();
+                int lastDashIndex = serviceName.lastIndexOf("-");
+                String lastPart = serviceName.substring(lastDashIndex + 1);
+                // 示例: Send-Post.Biz-Post-RouteStaff
+                // 该消费者组表示: 寄件使用Post服务消费Biz-Post-RouteStaff这个Topic
+                setGroupIdPrefix("Send-" + Character.toUpperCase(lastPart.charAt(0)) + lastPart.substring(1) + ".");
+            } catch (Exception e) {
+                throw new IllegalStateException("Can't get default groupId");
+            }
         }
     }
 

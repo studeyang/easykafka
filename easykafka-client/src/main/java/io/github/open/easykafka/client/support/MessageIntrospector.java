@@ -97,13 +97,19 @@ public final class MessageIntrospector {
      * 获取带有@MessageKey的Field
      */
     private static Field getMessageKeyField(Class<? extends AbstractMessage> clazz) {
-        for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(MessageKey.class)) {
-                if (!field.isAccessible()) {
-                    field.setAccessible(true);
+        Class<?> currentClass = clazz;
+        // 避免检查到最顶层的基类
+        while (currentClass != null && currentClass != AbstractMessage.class) {
+            for (Field field : currentClass.getDeclaredFields()) {
+                if (field.isAnnotationPresent(MessageKey.class)) {
+                    if (!field.isAccessible()) {
+                        field.setAccessible(true);
+                    }
+                    return field;
                 }
-                return field;
             }
+            // 移动到父类
+            currentClass = currentClass.getSuperclass();
         }
         return null;
     }
@@ -113,16 +119,21 @@ public final class MessageIntrospector {
      */
     private static List<Field> getMessageHeaderFields(Class<? extends AbstractMessage> clazz) {
         List<Field> fields = new ArrayList<>();
-        for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(MessageHeader.class)) {
-
-                checkMessageHeaderType(clazz, field);
-
-                if (!field.isAccessible()) {
-                    field.setAccessible(true);
+        Class<?> currentClass = clazz;
+        // 避免检查到最顶层的基类
+        while (currentClass != null && currentClass != AbstractMessage.class) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (field.isAnnotationPresent(MessageHeader.class)) {
+                    // 检查header的类型是否支持的类型中
+                    checkMessageHeaderType(clazz, field);
+                    if (!field.isAccessible()) {
+                        field.setAccessible(true);
+                    }
+                    fields.add(field);
                 }
-                fields.add(field);
             }
+            // 移动到父类
+            currentClass = currentClass.getSuperclass();
         }
         return fields;
     }

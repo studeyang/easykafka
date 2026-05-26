@@ -1,5 +1,7 @@
 package io.github.open.easykafka.client.support.properties;
 
+import io.github.open.easykafka.client.exception.InitializeException;
+import io.github.open.easykafka.client.model.ErrorCode;
 import io.github.open.easykafka.client.model.Tag;
 import lombok.Data;
 import org.springframework.beans.factory.InitializingBean;
@@ -41,6 +43,13 @@ public class EasyKafkaProperties implements InitializingBean {
                 init.getKafkaCluster().add(grayKafkaCluster);
             }
         });
+    }
+
+    public InitProperties.KafkaCluster getKafkaCluster(String clusterName, Tag tag) {
+        return init.getKafkaCluster().stream()
+                .filter(config -> clusterName.equals(config.getCluster()) && tag == config.getTag())
+                .findFirst()
+                .orElseThrow(() -> new InitializeException(ErrorCode.CLUSTER_NOT_FOUND));
     }
 
 }

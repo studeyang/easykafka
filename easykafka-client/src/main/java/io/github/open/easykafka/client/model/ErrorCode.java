@@ -13,6 +13,7 @@ public enum ErrorCode {
 
     /** ========== Initialize Exception: status 定义为: EK01__  ========== */
     UNDEFINE("EK0101", "UNDEFINE", "未定义"),
+    CLUSTER_NOT_FOUND("EK0102", "CLUSTER_NOT_FOUND", "找不到指定的cluster"),
 
 
     /** ========== Producer Exception: status 定义为: EK02__ ========== */

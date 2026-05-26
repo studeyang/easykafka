@@ -58,7 +58,7 @@ public class ProducerSender implements ISender {
     public MessageSendResult trySend(SendMessage message) {
 
         validate(message);
-        ProducerRecord<String, String> producerRecord = creatRecord(message);
+        ProducerRecord<String, String> producerRecord = createRecord(message);
 
         try {
             StringKafkaProducer producer = producerContainer.getProducer(message.getTopic().getCluster(),
@@ -110,7 +110,7 @@ public class ProducerSender implements ISender {
         Map<String, Future<RecordMetadata>> futureMap = new HashMap<>(8);
         // 每个消息先发送, 获取Future
         for (SendMessage message : messages) {
-            ProducerRecord<String, String> producerRecord = creatRecord(message);
+            ProducerRecord<String, String> producerRecord = createRecord(message);
             try {
                 StringKafkaProducer producer = producerContainer.getProducer(messages.get(0).getTopic().getCluster(),
                         message.getMessageTag());
@@ -173,7 +173,7 @@ public class ProducerSender implements ISender {
         }
     }
 
-    private ProducerRecord<String, String> creatRecord(SendMessage message) {
+    private ProducerRecord<String, String> createRecord(SendMessage message) {
         List<Header> headers = new ArrayList<>();
         if (!CollectionUtils.isEmpty(message.getMessageHeader())) {
             message.getMessageHeader().forEach((name, value) -> {

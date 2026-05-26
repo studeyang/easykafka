@@ -21,9 +21,9 @@
     <modules>
         <module>easykafka-client</module>
         <module>easykafka-spring-boot-starter</module>
-		<module>example-sdk</module>
 		<module>example-producer</module>
 		<module>example-consumer</module>
+		<module>example-sdk</module>
     </modules>
 
     <dependencyManagement>
